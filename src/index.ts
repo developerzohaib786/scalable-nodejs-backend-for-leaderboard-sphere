@@ -1,4 +1,11 @@
-import path from 'path';
+const express = require('express')
+const app = express()
+const port = 3000
 
-console.log('Hello, World from TypeScript!');
-console.log(`Current directory: ${path.resolve(__dirname)}`);
+app.get('/', (req: any, res: { send: (arg0: string) => void }) => {
+  res.send('Hello World from developer zohaib')
+}) 
+
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`)
+})

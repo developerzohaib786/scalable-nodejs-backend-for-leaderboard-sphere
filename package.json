@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node dist/index.js",
+    "dev": "nodemon",
     "build": "tsc",
-    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
     "type-check": "tsc --noEmit"
   },
   "keywords": [],
@@ -16,7 +16,12 @@
   "type": "commonjs",
   "devDependencies": {
     "@types/node": "^25.0.3",
+    "nodemon": "^3.1.11",
+    "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
   }
 }
