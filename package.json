@@ -15,18 +15,25 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "@types/node": "^25.0.3",
+    "@types/node": "^25.0.10",
+    "@types/pg": "^8.16.0",
     "nodemon": "^3.1.11",
+    "prisma": "^6.19.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^6.19.2",
     "@trpc/client": "^11.8.1",
     "@trpc/server": "^11.8.1",
     "@upstash/redis": "^1.36.1",
+    "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "ioredis": "^5.9.2",
+    "kafkajs": "^2.2.4",
+    "pg": "^8.17.2",
     "socket.io": "^4.8.3"
   }
 }

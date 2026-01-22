@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import SocketService from "./services/socket"
 import http from 'http'
 const httpServer = http.createServer()
