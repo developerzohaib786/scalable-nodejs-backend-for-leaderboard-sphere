@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import SocketService from "./services/socket"
+import { startMessageConsumer } from "./services/kafka"
 import http from 'http'
 const httpServer = http.createServer()
 const port = process.env.PORT || 3001
@@ -22,6 +23,13 @@ async function startServer() {
 
   socketService.initListeners()
 
+  // Start Kafka consumer for message persistence
+  try {
+    await startMessageConsumer();
+    console.log('✓ Kafka consumer initialized successfully');
+  } catch (error) {
+    console.error('✗ Failed to start Kafka consumer:', error);
+  }
 }
 
 startServer()
