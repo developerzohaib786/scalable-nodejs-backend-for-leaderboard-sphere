@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloudinary Upload Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .section h2 {
+            color: #555;
+            margin-top: 0;
+        }
+
+        input[type="file"] {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        input[type="text"] {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .delete-btn {
+            background: #f44336;
+        }
+
+        .delete-btn:hover {
+            background: #da190b;
+        }
+
+        #uploadResult,
+        #deleteResult {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        img,
+        video {
+            max-width: 100%;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🌩️ Cloudinary File Upload Test</h1>
+
+        <!-- Upload Section -->
+        <div class="section">
+            <h2>Upload File</h2>
+            <p>Supported: Images (JPG, PNG, GIF, WebP, SVG), Videos (MP4, MOV, AVI), Documents (PDF, DOC, DOCX, PPT,
+                PPTX)</p>
+            <input type="file" id="fileInput" accept="image/*,video/*,.pdf,.doc,.docx,.ppt,.pptx">
+            <button onclick="uploadFile()">Upload File</button>
+            <div id="uploadResult"></div>
+        </div>
+
+        <!-- Delete Section -->
+        <div class="section">
+            <h2>Delete File</h2>
+            <p>Enter the public ID from the upload result above</p>
+            <input type="text" id="publicIdInput" placeholder="e.g., leaderboard-sphere/filename">
+            <select id="resourceTypeSelect">
+                <option value="image">Image</option>
+                <option value="video">Video</option>
+                <option value="raw">Document (PDF, DOC, PPT)</option>
+            </select>
+            <button class="delete-btn" onclick="deleteFile()">Delete File</button>
+            <div id="deleteResult"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api/cloudinary';
+
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const resultDiv = document.getElementById('uploadResult');
+
+            if (!fileInput.files[0]) {
+                showResult(resultDiv, 'Please select a file', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.className = '';
+                resultDiv.innerHTML = 'Uploading...';
+
+                const response = await fetch(`${API_BASE}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    let preview = '';
+                    if (data.resourceType === 'image') {
+                        preview = `<img src="${data.url}" alt="Uploaded image">`;
+                    } else if (data.resourceType === 'video') {
+                        preview = `<video controls src="${data.url}"></video>`;
+                    }
+
+                    showResult(resultDiv,
+                        `✅ ${data.message}<br><br>
+                        <strong>URL:</strong> <a href="${data.url}" target="_blank">${data.url}</a><br>
+                        <strong>Public ID:</strong> ${data.publicId}<br>
+                        <strong>Format:</strong> ${data.format}<br>
+                        <strong>Size:</strong> ${(data.size / 1024).toFixed(2)} KB<br>
+                        ${preview}`,
+                        'success'
+                    );
+
+                    // Auto-fill delete input
+                    document.getElementById('publicIdInput').value = data.publicId;
+                    document.getElementById('resourceTypeSelect').value = data.resourceType;
+                } else {
+                    showResult(resultDiv, `❌ ${data.error || 'Upload failed'}`, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function deleteFile() {
+            const publicId = document.getElementById('publicIdInput').value;
+            const resourceType = document.getElementById('resourceTypeSelect').value;
+            const resultDiv = document.getElementById('deleteResult');
+
+            if (!publicId) {
+                showResult(resultDiv, 'Please enter a public ID', 'error');
+                return;
+            }
+
+            try {
+                resultDiv.style.display = 'block';
+                resultDiv.className = '';
+                resultDiv.innerHTML = 'Deleting...';
+
+                // Encode slashes in the publicId
+                const encodedPublicId = publicId.replace(/\//g, '%2F');
+
+                const response = await fetch(`${API_BASE}/delete/${encodedPublicId}?resourceType=${resourceType}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult(resultDiv, `✅ ${data.message}`, 'success');
+                } else {
+                    showResult(resultDiv, `❌ ${data.error || 'Delete failed'}`, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        function showResult(element, message, type) {
+            element.style.display = 'block';
+            element.className = type;
+            element.innerHTML = message;
+        }
+    </script>
+</body>
+
+</html>
