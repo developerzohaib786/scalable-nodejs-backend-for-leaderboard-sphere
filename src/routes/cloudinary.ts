@@ -109,44 +109,5 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
     }
 });
 
-// DELETE: Delete file from Cloudinary
-router.delete('/delete/:publicId', async (req: Request, res: Response): Promise<void> => {
-    try {
-        const publicId = req.params.publicId as string;
-        const resourceType = (req.query.resourceType as string) || 'image';
-
-        if (!publicId) {
-            res.status(400).json({ error: 'Public ID is required' });
-            return;
-        }
-
-        // Decode the publicId if it was URL encoded
-        const decodedPublicId = decodeURIComponent(publicId);
-
-        // Delete from Cloudinary
-        const result = await cloudinary.uploader.destroy(decodedPublicId, {
-            resource_type: resourceType as 'image' | 'video' | 'raw',
-        });
-
-        if (result.result === 'ok' || result.result === 'not found') {
-            res.status(200).json({
-                success: true,
-                message: result.result === 'ok' ? 'File deleted successfully' : 'File not found',
-                result: result,
-            });
-        } else {
-            res.status(400).json({
-                error: 'Failed to delete file',
-                result: result,
-            });
-        }
-    } catch (error: any) {
-        console.error('Delete error:', error);
-        res.status(500).json({
-            error: 'Failed to delete file',
-            message: error.message,
-        });
-    }
-});
 
 export default router;
