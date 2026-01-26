@@ -14,9 +14,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Message{
+model Room {
+  id        String    @id @default(uuid())
+  name      String
+  createdAt DateTime  @default(now())
+  messages  Message[]
+}
+
+model Message {
   id        String   @id @default(uuid())
   text      String
-  createdAt DateTime @default(now()) @map("created_at")
-  @@map("messages")
+  userName  String   @default("Anonymous")
+  userImage String   @default("https://avatar.iran.liara.run/public/1")
+  userId    String   @default("anonymous")
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id])
+  createdAt DateTime @default(now())
 }

@@ -38,6 +38,27 @@ export async function produceMessage(message: string) {
     return true;
 }
 
+// Helper function to ensure room exists in database
+async function ensureRoomExists(roomName: string) {
+    try {
+        let room = await prisma.room.findFirst({
+            where: { name: roomName }
+        });
+
+        if (!room) {
+            room = await prisma.room.create({
+                data: { name: roomName }
+            });
+            console.log(`Created new room: ${roomName}`);
+        }
+
+        return room;
+    } catch (error) {
+        console.error(`Error ensuring room exists: ${roomName}`, error);
+        throw error;
+    }
+}
+
 export async function startMessageConsumer() {
     console.log('Starting Kafka consumer...');
 
@@ -54,7 +75,7 @@ export async function startMessageConsumer() {
             await admin.createTopics({
                 topics: [{
                     topic: 'MESSAGES',
-                    numPartitions: 1,
+                    numPartitions: 4, // Increased partitions for better scalability
                     replicationFactor: 1
                 }]
             });
@@ -65,34 +86,67 @@ export async function startMessageConsumer() {
         console.error('Error creating topic:', error);
     }
 
-    const consumer = kafka.consumer({ groupId: 'test-group' })
+    const consumer = kafka.consumer({
+        groupId: 'chat-messages-consumer-group',
+        sessionTimeout: 30000,
+        heartbeatInterval: 3000
+    })
 
     await consumer.connect()
-    await consumer.subscribe({ topic: 'MESSAGES', fromBeginning: true })
+    console.log('Kafka consumer connected');
+
+    await consumer.subscribe({
+        topic: 'MESSAGES',
+        fromBeginning: false // Only consume new messages for production
+    })
 
     await consumer.run({
         autoCommit: true,
-
-        eachMessage: async ({ message, pause }) => {
+        eachMessage: async ({ topic, partition, message, pause }) => {
             if (!message.value) return;
-            console.log({
-                value: message.value.toString(),
-            })
+
+            const rawMessage = message.value.toString();
+            console.log(`[Kafka Consumer] Received message from partition ${partition}:`, rawMessage);
+
             try {
+                // Parse the message data: { message: "text", room: "room1", userName: "John", userImage: "url", userId: "id" }
+                const messageData = JSON.parse(rawMessage);
+                const { message: messageText, room: roomName, userName, userImage, userId } = messageData;
+
+                if (!messageText || !roomName) {
+                    console.error('Invalid message format:', messageData);
+                    return;
+                }
+
+                // Ensure the room exists in the database
+                const room = await ensureRoomExists(roomName);
+
+                // Store the message in PostgreSQL
                 await prisma.message.create({
                     data: {
-                        text: message.value?.toString(),
+                        text: messageText,
+                        userName: userName || 'Anonymous',
+                        userImage: userImage || 'https://avatar.iran.liara.run/public/1',
+                        userId: userId || 'anonymous',
+                        roomId: room.id,
                     },
                 });
-                console.log('Message saved to database via kafka consumer:', message.value.toString());
+
+                console.log(`✓ Message saved to PostgreSQL for room "${roomName}" from ${userName} (${userId}):`, messageText);
             } catch (error) {
-                console.error('Error saving message to database:', error);
+                console.error('Error processing message from Kafka:', error);
+
+                // Pause consumer on error to prevent message loss
                 pause();
+                console.log('Consumer paused due to error, will resume in 10 seconds...');
+
                 setTimeout(() => {
                     consumer.resume([{ topic: 'MESSAGES' }]);
-                }, 60 * 1000); // Pause for 1 minute before resuming
+                    console.log('Consumer resumed');
+                }, 10000); // Reduced to 10 seconds for better recovery
             }
         },
     })
 
+    console.log('Kafka consumer is now listening for messages...');
 }
