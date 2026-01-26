@@ -69,7 +69,18 @@ class SocketService {
             });
 
             // Handle room-specific messages
-            socket.on('event:message', async ({ message, room, userName, userImage, userId }: { message: string, room: string, userName: string, userImage: string, userId: string }) => {
+            socket.on('event:message', async ({ message, room, userName, userImage, userId, imageUrl, videoUrl, rawFileUrl, replyToId, replyToText }: {
+                message: string,
+                room: string,
+                userName: string,
+                userImage: string,
+                userId: string,
+                imageUrl?: string,
+                videoUrl?: string,
+                rawFileUrl?: string,
+                replyToId?: string,
+                replyToText?: string
+            }) => {
                 console.log(`Received message for room ${room} from ${userName} (${userId}):`, message);
 
                 if (!ROOMS.includes(room)) {
@@ -77,7 +88,18 @@ class SocketService {
                     return;
                 }
 
-                const messageData = JSON.stringify({ message, room, userName, userImage, userId });
+                const messageData = JSON.stringify({
+                    message,
+                    room,
+                    userName,
+                    userImage,
+                    userId,
+                    imageUrl,
+                    videoUrl,
+                    rawFileUrl,
+                    replyToId,
+                    replyToText
+                });
 
                 // Publish the message to Redis for the specific room
                 await pub.publish(`MESSAGES:${room}`, messageData);

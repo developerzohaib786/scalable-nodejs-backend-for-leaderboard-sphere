@@ -109,9 +109,9 @@ export async function startMessageConsumer() {
             console.log(`[Kafka Consumer] Received message from partition ${partition}:`, rawMessage);
 
             try {
-                // Parse the message data: { message: "text", room: "room1", userName: "John", userImage: "url", userId: "id" }
+                // Parse the message data: { message: "text", room: "room1", userName: "John", userImage: "url", userId: "id", imageUrl?, videoUrl?, rawFileUrl?, replyToId?, replyToText? }
                 const messageData = JSON.parse(rawMessage);
-                const { message: messageText, room: roomName, userName, userImage, userId } = messageData;
+                const { message: messageText, room: roomName, userName, userImage, userId, imageUrl, videoUrl, rawFileUrl, replyToId, replyToText } = messageData;
 
                 if (!messageText || !roomName) {
                     console.error('Invalid message format:', messageData);
@@ -129,6 +129,11 @@ export async function startMessageConsumer() {
                         userImage: userImage || 'https://avatar.iran.liara.run/public/1',
                         userId: userId || 'anonymous',
                         roomId: room.id,
+                        imageUrl: imageUrl || null,
+                        videoUrl: videoUrl || null,
+                        rawFileUrl: rawFileUrl || null,
+                        replyToId: replyToId || null,
+                        replyToText: replyToText || null,
                     },
                 });
 
