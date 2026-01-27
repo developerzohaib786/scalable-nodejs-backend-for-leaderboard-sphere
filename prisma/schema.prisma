@@ -22,12 +22,17 @@ model Room {
 }
 
 model Message {
-  id        String   @id @default(uuid())
-  text      String
-  userName  String   @default("Anonymous")
-  userImage String   @default("https://avatar.iran.liara.run/public/1")
-  userId    String   @default("anonymous")
-  roomId    String
-  room      Room     @relation(fields: [roomId], references: [id])
-  createdAt DateTime @default(now())
+  id           String   @id @default(uuid())
+  text         String
+  userName     String   @default("Anonymous")
+  userImage    String   @default("https://avatar.iran.liara.run/public/1")
+  userId       String   @default("anonymous")
+  roomId       String
+  room         Room     @relation(fields: [roomId], references: [id])
+  imageUrl     String?
+  videoUrl     String?
+  rawFileUrl   String?
+  replyToId    String?
+  replyToText  String?
+  createdAt    DateTime @default(now())
 }
