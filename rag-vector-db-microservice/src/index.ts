@@ -87,7 +87,7 @@ app.get('/chat', async (req, res) => {
 
         // Prepare context for LLM
         const context = JSON.stringify(contextResults);
-        const prompt = `You are a helpful AI assistant. Answer the user's question based only on the following context from PDF files.\nContext: ${context}`;
+        const prompt = `You are a helpful AI assistant. Answer the user's question in Markdown format based only on the following context from PDF files.\nContext: ${context}.`;
 
         // Use Cohere LLM (CohereClientV2 messages format)
         const response = await client.chat({
@@ -102,9 +102,12 @@ app.get('/chat', async (req, res) => {
             ? response.message.content[0].text
             : '';
 
-        res.json({ message: answer,
-                context: contextResults
-         });
+        console.log("LLM response:", answer);
+
+        res.json({
+            message: answer,
+            context: contextResults
+        });
     } catch (error: any) {
         console.error('Chat error:', error);
         res.status(500).json({ error: error?.message || 'Internal server error.' });
