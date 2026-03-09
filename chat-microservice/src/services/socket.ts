@@ -5,9 +5,9 @@ import { produceMessage } from './kafka';
 
 // i am using upstash for spinning redis stance
 
-const pub = new Redis("rediss://default:AR0pAAImcDI0ZDIyZjZjNTNkYmU0ZmIzYmNlMTg5ZDZiOThjZTM2YXAyNzQ2NQ@central-bulldog-7465.upstash.io:6379");
+const pub = new Redis("rediss://default:AVwJAAIncDFhMDgzMTVjYjdjYzU0NTk5ODI2NDhhMjQzY2NlM2VjOHAxMjM1NjE@winning-wahoo-23561.upstash.io:6379");
 
-const sub = new Redis("rediss://default:AR0pAAImcDI0ZDIyZjZjNTNkYmU0ZmIzYmNlMTg5ZDZiOThjZTM2YXAyNzQ2NQ@central-bulldog-7465.upstash.io:6379");
+const sub = new Redis("rediss://default:AVwJAAIncDFhMDgzMTVjYjdjYzU0NTk5ODI2NDhhMjQzY2NlM2VjOHAxMjM1NjE@winning-wahoo-23561.upstash.io:6379");
 
 // Define 4 rooms
 const ROOMS = ['room1', 'room2', 'room3', 'room4'];
@@ -71,7 +71,7 @@ class SocketService {
             // Handle room-specific messages
             socket.on('event:message', async ({ message, room, userName, userImage, userId, imageUrl, videoUrl, rawFileUrl, replyToId, replyToText }: {
                 message: string,
-                room: string,
+                room: string, 
                 userName: string,
                 userImage: string,
                 userId: string,
