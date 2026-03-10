@@ -48,6 +48,58 @@ router.get('/room/:roomId', async (req: Request, res: Response): Promise<void> =
     }
 });
 
+// GET: Fetch last message in a room by room name
+router.get('/room/:roomName/last', async (req: Request, res: Response): Promise<void> => {
+    try {
+        const roomName = req.params.roomName as string;
+
+        if (!roomName) {
+            res.status(400).json({ error: 'Room name is required' });
+            return;
+        }
+
+        // Find the room by name
+        const room = await prisma.room.findFirst({
+            where: { name: roomName },
+        });
+
+        if (!room) {
+            res.status(404).json({
+                success: false,
+                error: 'Room not found',
+            });
+            return;
+        }
+
+        // Fetch the last message from the room
+        const lastMessage = await prisma.message.findFirst({
+            where: { roomId: room.id },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        if (!lastMessage) {
+            res.status(200).json({
+                success: true,
+                message: null,
+                room: roomName,
+            });
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            message: lastMessage,
+            room: roomName,
+        });
+    } catch (error: any) {
+        console.error('Error fetching last message:', error);
+        res.status(500).json({
+            error: 'Failed to fetch last message',
+            message: error.message,
+        });
+    }
+});
+
 // GET: Fetch room information
 router.get('/room/:roomId/info', async (req: Request, res: Response): Promise<void> => {
     try {
